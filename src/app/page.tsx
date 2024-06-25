@@ -18,9 +18,6 @@ import AuthService from "./services/authorization";
 import TokenData from "./components/TokenData";
 import { AlertContext } from "./components/AlertProvider";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import { InputLabel } from "./components/InputLabel";
-import { Select } from "./components/Select";
-import { SelectMenuItem } from "./components/SelectMenuItem";
 
 interface Tokens {
   access_token: string;
@@ -109,7 +106,7 @@ const initialFormValues: FormValues = {
 };
 
 export default function Form() {
-  const [flowType, setFlowType] = useState("authorization-code");
+  const [flowType, setFlowType] = useState<string>("");
   const [formValues, setFormValues] = useState<FormValues>(initialFormValues);
 
   const [authenticated, setAuthenticated] = useState(false);
@@ -154,6 +151,11 @@ export default function Form() {
     ]
   );
 
+  const handleFlowTypeChange = (e: any) => {
+    setFlowType(e.target.value);
+    window.localStorage.setItem("flowType", e.target.value);
+  };
+
   const handleAuthCallback = useCallback(async () => {
     await authService.handleCallback();
     setAuthenticated(authService.isAuthenticated());
@@ -162,13 +164,14 @@ export default function Form() {
   }, [authService]);
 
   useEffect(() => {
-    if (
-      typeof window !== "undefined" &&
-      window.localStorage.getItem("formValues")
-    ) {
-      setFormValues(
-        JSON.parse(window.localStorage.getItem("formValues") || "")
-      );
+    if (typeof window !== "undefined") {
+      if (window.localStorage.getItem("formValues")) {
+        setFormValues(
+          JSON.parse(window.localStorage.getItem("formValues") || "")
+        );
+      }
+      if (window.localStorage.getItem("flowType"))
+        setFlowType(localStorage.getItem("flowType") || "");
     }
   }, []);
 
@@ -183,6 +186,9 @@ export default function Form() {
   const handleLogin = async () => {
     try {
       await authService.login(flowType);
+      if (["service-account", "password"].includes(flowType)) {
+        window.location.reload();
+      }
     } catch (err: any) {
       setError(err?.message || err);
       console.error("testoig", error);
@@ -190,7 +196,11 @@ export default function Form() {
   };
 
   const handleLogout = () => {
-    authService.logout();
+    if (!["service-account", "password"].includes(flowType)) {
+      authService.logout();
+    }
+    sessionStorage.removeItem("tokens");
+    window.location.reload();
   };
 
   const setScopes = (scopes: string[]) => {
@@ -293,33 +303,35 @@ export default function Form() {
     <>
       <Grid container sx={{ flexGrow: 1, padding: 0.5 }} spacing={0.5}>
         <Grid item xs={12} md={authenticated ? 6 : 12}>
-          <Typography variant="h5" sx={{ padding: 2, color: "primary.main" }}>
+          <Typography variant="h5" sx={{ padding: 1, color: "black" }}>
             OpenID-Connect
           </Typography>
           <form noValidate onSubmit={handleSubmit}>
-            <div style={{ padding: 5 }}>
-              <FormControl fullWidth>
-                <InputLabel>Flow Type</InputLabel>
-                <Select
-                  labelId="demo-simple-select-label"
-                  id="demo-simple-select"
-                  value={flowType}
-                  label="Flow Type"
-                  onChange={(e: any) => setFlowType(e.target.value)}
-                  name="flowType"
-                  required
-                >
-                  <SelectMenuItem value={"authorization-code"}>
-                    Authorization Code
-                  </SelectMenuItem>
-                  <SelectMenuItem value={"service-account"}>
-                    Service Account
-                  </SelectMenuItem>
-                  <SelectMenuItem value={"password"}>Password</SelectMenuItem>
-                </Select>
-              </FormControl>
-            </div>
-
+            <FormControl sx={{ width: "100%", padding: 1 }}>
+              <FormLabel>Flow</FormLabel>
+              <RadioGroup
+                value={flowType}
+                onChange={(e) => handleFlowTypeChange(e)}
+                sx={{ color: "black" }}
+                row
+              >
+                <FormControlLabel
+                  value="authorization-code"
+                  control={<Radio />}
+                  label="Authorization Code"
+                />
+                <FormControlLabel
+                  value="service-account"
+                  control={<Radio />}
+                  label="Service Account"
+                />
+                <FormControlLabel
+                  value="password"
+                  control={<Radio />}
+                  label="Password"
+                />
+              </RadioGroup>
+            </FormControl>
             <Box
               sx={{
                 textAlign: "center",

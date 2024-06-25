@@ -94,32 +94,33 @@ export default class AuthService {
   };
   async login(flowType: string) {
     if (["service-account", "password"].includes(flowType)) {
-      const tokenRequestBody = new URLSearchParams({
-        client_id: this.clientId || "",
-        scope: this.scopes.join(" "),
-      });
+      const tokenRequestBody: any = {
+        tokenUrl: this.tokenEndpoint,
+        clientId: this.clientId || "",
+        scopes: this.scopes,
+      };
       if (flowType === "service-account") {
-        tokenRequestBody.append("grant_type", "client_credentials");
-        tokenRequestBody.append("client_secret", this.clientSecret || "");
+        tokenRequestBody["grantType"] = "client_credentials";
+        tokenRequestBody["clientSecret"] = this.clientSecret || "";
       } else {
-        tokenRequestBody.append("grant_type", "password");
-        tokenRequestBody.append("username", this.username);
-        tokenRequestBody.append("password", this.password);
+        tokenRequestBody["grantType"] = "password";
+        tokenRequestBody["username"] = this.username;
+        tokenRequestBody["password"] = this.password;
         if (this.clientSecret) {
-          tokenRequestBody.append("client_secret", this.clientSecret || "");
+          tokenRequestBody.clientSecret = this.clientSecret || "";
         }
       }
-      const response = await fetch(this.tokenEndpoint, {
+
+      const response = await fetch("/api/token", {
         method: "POST",
+        body: JSON.stringify(tokenRequestBody),
         headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
+          "Content-Type": "application/json",
         },
-        body: tokenRequestBody.toString(),
       });
       if (response.status !== 200) {
         const error = await response.text();
         throw new Error("Failed to login");
-        return;
       }
       const tokens = await response.json();
       sessionStorage.setItem("tokens", JSON.stringify(tokens || {}));
