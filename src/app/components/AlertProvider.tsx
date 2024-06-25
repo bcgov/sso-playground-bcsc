@@ -1,6 +1,7 @@
 "use client";
-import { Box, Snackbar, SnackbarOrigin } from "@mui/material";
-import { createContext, useState } from "react";
+import { Alert, Box, Snackbar, SnackbarOrigin } from "@mui/material";
+import { createContext, useEffect, useState } from "react";
+import Slide, { SlideProps } from "@mui/material/Slide";
 
 interface AlertProviderProps {
   children: React.ReactNode;
@@ -8,6 +9,10 @@ interface AlertProviderProps {
 
 interface State extends SnackbarOrigin {
   open: boolean;
+}
+
+function SlideTransition(props: SlideProps) {
+  return <Slide {...props} direction="down" />;
 }
 
 export interface AlertContext {
@@ -29,9 +34,11 @@ export const AlertProvider = (props: AlertProviderProps) => {
   });
   const { vertical, horizontal, open } = state;
 
-  const handleClick = (newState: SnackbarOrigin) => () => {
-    setState({ ...newState, open: true });
-  };
+  useEffect(() => {
+    if (error) {
+      setState({ ...state, open: true });
+    }
+  }, [error]);
 
   const handleClose = () => {
     setState({ ...state, open: false });
@@ -47,7 +54,17 @@ export const AlertProvider = (props: AlertProviderProps) => {
             onClose={handleClose}
             message={error}
             autoHideDuration={5000}
-          />
+            TransitionComponent={SlideTransition}
+          >
+            <Alert
+              onClose={handleClose}
+              severity="error"
+              sx={{ width: "100%" }}
+              variant="filled"
+            >
+              {error}
+            </Alert>
+          </Snackbar>
         </Box>
       )}
 

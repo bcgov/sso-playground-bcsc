@@ -191,7 +191,7 @@ export default function Form() {
       }
     } catch (err: any) {
       setError(err?.message || err);
-      console.error("testoig", error);
+      console.error(error);
     }
   };
 
@@ -301,12 +301,20 @@ export default function Form() {
 
   return (
     <>
-      <Grid container sx={{ flexGrow: 1, padding: 0.5 }} spacing={0.5}>
+      <Grid container sx={{ flexGrow: 1, padding: 0.5 }}>
         <Grid item xs={12} md={authenticated ? 6 : 12}>
           <Typography variant="h5" sx={{ padding: 1, color: "black" }}>
             OpenID-Connect
           </Typography>
-          <form noValidate onSubmit={handleSubmit}>
+          <form
+            noValidate
+            onSubmit={handleSubmit}
+            style={{
+              height: "100vh",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
             <FormControl sx={{ width: "100%", padding: 1 }}>
               <FormLabel>Flow</FormLabel>
               <RadioGroup
@@ -332,147 +340,152 @@ export default function Form() {
                 />
               </RadioGroup>
             </FormControl>
-            <Box
-              sx={{
-                textAlign: "center",
-                height: "100vh",
-              }}
-            >
-              <TextField
-                name="discoveryUrl"
-                label="Discovery URL"
-                onChange={(e) => handleChange(e)}
-                value={formValues.discoveryUrl.value}
-                InputProps={{
-                  endAdornment: validDiscoveryUrl && (
-                    <CheckCircleIcon color="success" />
-                  ),
+            {flowType && (
+              <Box
+                sx={{
+                  textAlign: "center",
+                  height: "100vh",
                 }}
-              />
-
-              {flowType === "authorization-code" && (
-                <>
-                  <TextField
-                    name="authorizationUrl"
-                    label="Authorization URL"
-                    onChange={(e) => handleChange(e)}
-                    value={formValues.authorizationUrl.value}
-                    required
-                    error={formValues.authorizationUrl.error}
-                    helperText={
-                      formValues.authorizationUrl.error &&
-                      formValues.authorizationUrl.errorMessage
-                    }
-                  />
-                  <TextField
-                    name="forwardQueryParams"
-                    label="Forward Query Params"
-                    onChange={(e) => handleChange(e)}
-                    value={formValues.forwardQueryParams.value}
-                  />
-                </>
-              )}
-
-              <TextField
-                name="tokenUrl"
-                label="Token URL"
-                onChange={(e) => handleChange(e)}
-                value={formValues.tokenUrl.value}
-                error={formValues.tokenUrl.error}
-                helperText={
-                  formValues.tokenUrl.error && formValues.tokenUrl.errorMessage
-                }
-                required
-              />
-
-              {flowType === "authorization-code" && (
-                <TextField
-                  name="logoutUrl"
-                  label="Logout URL"
-                  onChange={(e) => handleChange(e)}
-                  value={formValues.logoutUrl.value}
-                />
-              )}
-              <TextField
-                name="clientId"
-                label="Client ID"
-                onChange={(e) => handleChange(e)}
-                value={formValues.clientId.value}
-                required
-                error={formValues.clientId.error}
-                helperText={
-                  formValues.clientId.error && formValues.clientId.errorMessage
-                }
-              />
-              <TextField
-                name="clientSecret"
-                label="Client Secret"
-                onChange={(e) => handleChange(e)}
-                value={formValues.clientSecret.value}
-              />
-              {flowType === "password" && (
-                <>
-                  <TextField
-                    name="username"
-                    label="Username"
-                    onChange={(e) => handleChange(e)}
-                    value={formValues.username.value}
-                    error={formValues.username.error}
-                    helperText={
-                      formValues.username.error &&
-                      formValues.username.errorMessage
-                    }
-                  />
-
-                  <TextField
-                    name="password"
-                    label="Password"
-                    onChange={(e) => handleChange(e)}
-                    value={formValues.password.value}
-                    error={formValues.password.error}
-                    helperText={
-                      formValues.password.error &&
-                      formValues.password.errorMessage
-                    }
-                  />
-                </>
-              )}
-
-              <MultiSelect
-                onChange={setScopes}
-                label="Scopes"
-                defaultValue={["openid"]}
-                fixedOptions={["openid"]}
-              />
-              {flowType === "authorization-code" && (
-                <TextField
-                  name="redirectUri"
-                  label="Redirect URI"
-                  onChange={(e) => handleChange(e)}
-                  value={formValues.redirectUri.value}
-                />
-              )}
-              {authenticated ? (
-                <Button variant="contained" onClick={handleLogout}>
-                  Logout
-                </Button>
-              ) : (
-                <Button variant="contained" type="submit">
-                  Login
-                </Button>
-              )}
-              <Button
-                variant="contained"
-                onClick={() => {
-                  localStorage.removeItem("formValues");
-                  window.location.reload();
-                }}
-                color="error"
-                sx={{ marginLeft: 2 }}
               >
-                Reset
-              </Button>
-            </Box>
+                <TextField
+                  name="discoveryUrl"
+                  label="Discovery URL"
+                  onChange={(e) => handleChange(e)}
+                  value={formValues.discoveryUrl.value}
+                  InputProps={{
+                    endAdornment: validDiscoveryUrl && (
+                      <CheckCircleIcon color="success" />
+                    ),
+                  }}
+                />
+
+                {!["service-account", "password"].includes(flowType) && (
+                  <>
+                    <TextField
+                      name="authorizationUrl"
+                      label="Authorization URL"
+                      onChange={(e) => handleChange(e)}
+                      value={formValues.authorizationUrl.value}
+                      required
+                      error={formValues.authorizationUrl.error}
+                      helperText={
+                        formValues.authorizationUrl.error &&
+                        formValues.authorizationUrl.errorMessage
+                      }
+                    />
+                    <TextField
+                      name="forwardQueryParams"
+                      label="Forward Query Params"
+                      onChange={(e) => handleChange(e)}
+                      value={formValues.forwardQueryParams.value}
+                      helperText="param1=value1&param2=value2"
+                    />
+                  </>
+                )}
+
+                <TextField
+                  name="tokenUrl"
+                  label="Token URL"
+                  onChange={(e) => handleChange(e)}
+                  value={formValues.tokenUrl.value}
+                  error={formValues.tokenUrl.error}
+                  helperText={
+                    formValues.tokenUrl.error &&
+                    formValues.tokenUrl.errorMessage
+                  }
+                  required
+                />
+
+                {!["service-account", "password"].includes(flowType) && (
+                  <TextField
+                    name="logoutUrl"
+                    label="Logout URL"
+                    onChange={(e) => handleChange(e)}
+                    value={formValues.logoutUrl.value}
+                  />
+                )}
+                <TextField
+                  name="clientId"
+                  label="Client ID"
+                  onChange={(e) => handleChange(e)}
+                  value={formValues.clientId.value}
+                  required
+                  error={formValues.clientId.error}
+                  helperText={
+                    formValues.clientId.error &&
+                    formValues.clientId.errorMessage
+                  }
+                />
+                <TextField
+                  name="clientSecret"
+                  label="Client Secret"
+                  onChange={(e) => handleChange(e)}
+                  value={formValues.clientSecret.value}
+                />
+                {flowType === "password" && (
+                  <>
+                    <TextField
+                      name="username"
+                      label="Username"
+                      onChange={(e) => handleChange(e)}
+                      value={formValues.username.value}
+                      error={formValues.username.error}
+                      helperText={
+                        formValues.username.error &&
+                        formValues.username.errorMessage
+                      }
+                    />
+
+                    <TextField
+                      name="password"
+                      label="Password"
+                      onChange={(e) => handleChange(e)}
+                      value={formValues.password.value}
+                      error={formValues.password.error}
+                      helperText={
+                        formValues.password.error &&
+                        formValues.password.errorMessage
+                      }
+                    />
+                  </>
+                )}
+
+                <MultiSelect
+                  onChange={setScopes}
+                  label="Scopes"
+                  defaultValue={["openid"]}
+                  fixedOptions={["openid"]}
+                />
+                {!["service-account", "password"].includes(flowType) && (
+                  <TextField
+                    name="redirectUri"
+                    label="Redirect URI"
+                    onChange={(e) => handleChange(e)}
+                    value={formValues.redirectUri.value}
+                  />
+                )}
+                {authenticated ? (
+                  <Button variant="contained" onClick={handleLogout}>
+                    Logout
+                  </Button>
+                ) : (
+                  <Button variant="contained" type="submit">
+                    Login
+                  </Button>
+                )}
+                <Button
+                  variant="contained"
+                  onClick={() => {
+                    localStorage.removeItem("formValues");
+                    window.location.reload();
+                  }}
+                  color="error"
+                  sx={{ marginLeft: 2 }}
+                >
+                  Reset
+                </Button>
+              </Box>
+            )}
           </form>
         </Grid>
         {authenticated && (

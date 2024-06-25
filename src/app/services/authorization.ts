@@ -119,8 +119,8 @@ export default class AuthService {
         },
       });
       if (response.status !== 200) {
-        const error = await response.text();
-        throw new Error("Failed to login");
+        const error = await response.json();
+        throw new Error(error?.error);
       }
       const tokens = await response.json();
       sessionStorage.setItem("tokens", JSON.stringify(tokens || {}));

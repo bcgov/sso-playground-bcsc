@@ -37,9 +37,12 @@ export async function POST(request: NextRequest, response: NextResponse) {
   });
 
   if (!tokenResult.ok) {
+    const err = await tokenResult.json();
     return NextResponse.json(
-      { error: "Failed to retrieve token" },
-      { status: 400 }
+      {
+        error: err?.error_description || err?.error || err,
+      },
+      { status: tokenResult.status }
     );
   }
 
