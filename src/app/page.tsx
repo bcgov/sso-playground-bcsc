@@ -18,6 +18,10 @@ import AuthService from "./services/authorization";
 import TokenData from "./components/TokenData";
 import { AlertContext } from "./components/AlertProvider";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import getCofig from "next/config";
+
+const { publicRuntimeConfig } = getCofig();
+const { redirectUri } = publicRuntimeConfig;
 
 interface Tokens {
   access_token: string;
@@ -90,7 +94,7 @@ const initialFormValues: FormValues = {
     errorMessage: "",
   },
   redirectUri: {
-    value: "http://localhost:3000",
+    value: redirectUri || "http://localhost:3000",
     error: false,
     errorMessage: "",
   },

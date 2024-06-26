@@ -1,4 +1,4 @@
-# Auth Playground Helm Chart
+# SSO Playground Helm Chart
 
 The helm chart installs k8s objects with the release name `sso-playground`.
 

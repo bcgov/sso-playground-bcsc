@@ -10,7 +10,7 @@ import { AlertProvider } from "./components/AlertProvider";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Auth Playground",
+  title: "SSO Playground",
   description: "OIDC and SAML Playground",
 };
 

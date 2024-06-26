@@ -48,7 +48,7 @@ function ResponsiveAppBar() {
               textDecoration: "none",
             }}
           >
-            Auth Playground
+            SSO Playground
           </Typography>
 
           <Box sx={{ flexGrow: 1, display: { xs: "flex", md: "none" } }}>
@@ -92,7 +92,7 @@ function ResponsiveAppBar() {
             variant="h5"
             noWrap
             component="a"
-            href="#app-bar-with-responsive-menu"
+            href="/"
             sx={{
               display: { xs: "flex", md: "none" },
               flexGrow: 1,
@@ -103,7 +103,7 @@ function ResponsiveAppBar() {
               textDecoration: "none",
             }}
           >
-            Auth Playground
+            SSO Playground
           </Typography>
           <Box sx={{ flexGrow: 1, display: { xs: "none", md: "flex" } }}>
             <Button
@@ -112,12 +112,12 @@ function ResponsiveAppBar() {
             >
               OIDC
             </Button>
-            <Button
+            {/* <Button
               onClick={() => navigateTo("/saml")}
               sx={{ my: 2, color: "white", display: "block" }}
             >
               SAML
-            </Button>
+            </Button> */}
           </Box>
         </Toolbar>
       </Container>
