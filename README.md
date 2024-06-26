@@ -1,36 +1,53 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+---
+title: SSO Playground
+description: OIDC and SAML playground is a next.js application built by Pathfinder SSO Team
+---
 
-## Getting Started
+## SSO Playground
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+OIDC and SAML playground is a next.js application built by Pathfinder SSO Team.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Features
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Multiple configurations**: The playground offers flexibility in testing. You can choose from pre-configured OIDC providers like Keycloak, Auth0 or Google Accounts, or you can even enter your own OIDC URLs to test against a custom provider.
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+- **Hands-on experimentation**: By allowing users to interact with the OIDC flow manually, the playground provides a practical learning experience. Developers can experiment with different parameters and scopes to see how they affect the authorization process and the claims returned.
 
-## Learn More
+- **Improved debugging**: Since you can isolate and test each step individually, the playground can simplify debugging OIDC integration issues within your application.
 
-To learn more about Next.js, take a look at the following resources:
+## Usage
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Access the URL(http://localhost:3000 if running locally) in a browser and select a flow type that's relevant to your client.
+- After selecting the flow type, a form is displayed asking for parameters to run the authentication process.
+- The `Discovery URL` is a JSON document that contains important configuration details for the OpenID Connect provider. This document includes information such as:
+  - authorization endpoint URL
+  - token endpoint URL (optional for implicit flow)
+  - userinfo endpoint URL (optional)
+  - JSON Web Key Set (JWKS) document URL
+  - issuer identifier, and other relevant settings
+- After you enter the `Discovery URL`, it should auto populate other URLs if they exist in the JSON document.
+- Enter rest of the fields and click on `Login` button to run the authentication process. If the login was successful, the application should display a panel on the right of the form with a drop-down listing retrieved tokens.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+## Requirements
 
-## Deploy on Vercel
+- A browser
+- node v20
+- yarn v1.22
+- asdf (optional)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Installation
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+- Create a `.env` file at the root of the project and add below values
+  ```
+  NEXT_PUBLIC_REDIRECT_URI=http://localhost:3000
+  ```
+- `yarn` installs all the dependencies
+- `yarn dev` runs the application in development environment
+- `yarn build` generated a production build
+- `yarn start` runs the application in production environment
+
+## License
+
+Code released under the [Apache License, Version 2.0](./LICENSE).
