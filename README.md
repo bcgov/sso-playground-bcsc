@@ -1,11 +1,4 @@
----
-title: SSO Playground
-description: OIDC and SAML playground is a next.js application built by Pathfinder SSO Team
----
-
 ## SSO Playground
-
----
 
 OIDC and SAML playground is a next.js application built by Pathfinder SSO Team.
 
