@@ -1,15 +1,15 @@
 replicaCount: 1
 
 image:
-  repository: ghcr.io/nithinkuruba/auth-playground
+  repository: ghcr.io/bcgov/sso-playground
   tag: v1.0.1
   pullPolicy: Always
 
 imagePullSecrets:
   - name: gh-registry-config
 
-nameOverride: auth-playground
-fullnameOverride: auth-playground
+nameOverride: sso-playground
+fullnameOverride: sso-playground
 
 service:
   type: ClusterIP

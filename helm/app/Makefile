@@ -4,19 +4,19 @@ NAMESPACE=
 
 .PHONY: install
 install:
-	helm install auth-playground . -n "${NAMESPACE}" -f values.yaml
+	helm install sso-playground . -n "${NAMESPACE}" -f values.yaml
 
 .PHONY: upgrade
 upgrade:
-	helm upgrade --install auth-playground . -n "${NAMESPACE}" -f values.yaml
+	helm upgrade --install sso-playground . -n "${NAMESPACE}" -f values.yaml
 
 .PHONY: lint
 lint:
-	helm upgrade --dry-run --install auth-playground -n "${NAMESPACE}" -f values.yaml
+	helm upgrade --dry-run --install sso-playground -n "${NAMESPACE}" -f values.yaml
 
 .PHONY: uninstall
 uninstall:
-	helm uninstall auth-playground -n ${NAMESPACE}
+	helm uninstall sso-playground -n ${NAMESPACE}
 
 .PHONY: force-install
 force-install: uninstall
