@@ -1,0 +1,35 @@
+replicaCount: 1
+
+image:
+  repository: ghcr.io/nithinkuruba/auth-playground
+  tag: v1.0.1
+  pullPolicy: Always
+
+imagePullSecrets:
+  - name: gh-registry-config
+
+nameOverride: auth-playground
+fullnameOverride: auth-playground
+
+service:
+  type: ClusterIP
+  port: 8080
+
+route:
+  host:
+
+env: {}
+
+resources:
+  limits:
+    cpu: 50m
+    memory: 128Mi
+  requests:
+    cpu: 10m
+    memory: 64Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
