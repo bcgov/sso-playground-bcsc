@@ -20,11 +20,21 @@ interface TableDataProps {
   token: string;
 }
 
+function isJson(str: string) {
+  try {
+    JSON.parse(str);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
 const TableData = (props: TableDataProps) => {
   const { token } = props;
   const decodedToken = (token: string) => {
     if (!token) return;
-    return jwtDecode(token);
+    if (token.split(".").length > 1) return jwtDecode(token);
+    else return JSON.parse(token);
   };
 
   const unixTimestampToDate = (timestamp: number) => {
@@ -97,7 +107,7 @@ export default function TokenData(props: TokenDataProps) {
               <TableData token={tokens[token]} />
             ) : (
               <Typography variant="body1" sx={{ wordWrap: "break-word" }}>
-                {tokens[token]}
+                {JSON.stringify(tokens[token])}
               </Typography>
             )}
           </>
