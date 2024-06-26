@@ -18,6 +18,7 @@ import AuthService from "./services/authorization";
 import TokenData from "./components/TokenData";
 import { AlertContext } from "./components/AlertProvider";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import { env } from "next-runtime-env";
 
 interface Tokens {
   access_token: string;
@@ -45,6 +46,7 @@ interface FormValues {
   scopes: { value: string[]; error: boolean; errorMessage: string };
   username: { value: string; error: boolean; errorMessage: string };
   password: { value: string; error: boolean; errorMessage: string };
+  userinfoUrl: { value: string; error: boolean; errorMessage: string };
 }
 
 const initialFormValues: FormValues = {
@@ -83,8 +85,13 @@ const initialFormValues: FormValues = {
     error: false,
     errorMessage: "",
   },
+  userinfoUrl: {
+    value: "",
+    error: false,
+    errorMessage: "",
+  },
   redirectUri: {
-    value: "http://localhost:3000",
+    value: env("NEXT_PUBLIC_REDIRECT_URI") || "http://localhost:3000",
     error: false,
     errorMessage: "",
   },
@@ -136,6 +143,7 @@ export default function Form() {
         username: formValues.username.value,
         password: formValues.password.value,
         forwardQueryParams: formValues.forwardQueryParams.value,
+        userinfoEndpoint: formValues.userinfoUrl.value,
       }),
     [
       formValues.authorizationUrl.value,
@@ -148,6 +156,7 @@ export default function Form() {
       formValues.username.value,
       formValues.password.value,
       formValues.forwardQueryParams.value,
+      formValues.userinfoUrl.value,
     ]
   );
 
@@ -196,11 +205,12 @@ export default function Form() {
   };
 
   const handleLogout = () => {
-    if (!["service-account", "password"].includes(flowType)) {
+    if (flowType === "authorization-code") {
       authService.logout();
+    } else {
+      sessionStorage.removeItem("tokens");
+      window.location.reload();
     }
-    sessionStorage.removeItem("tokens");
-    window.location.reload();
   };
 
   const setScopes = (scopes: string[]) => {
@@ -246,6 +256,11 @@ export default function Form() {
               logoutUrl: {
                 ...formValues["logoutUrl"],
                 value: data.end_session_endpoint || "",
+                error: false,
+              },
+              userinfoUrl: {
+                ...formValues["userinfoUrl"],
+                value: data.userinfo_endpoint || "",
                 error: false,
               },
             });
@@ -301,192 +316,204 @@ export default function Form() {
 
   return (
     <>
-      <Grid container sx={{ flexGrow: 1, padding: 0.5 }}>
-        <Grid item xs={12} md={authenticated ? 6 : 12}>
+      <Grid container sx={{ padding: 0.5 }} spacing={1}>
+        <Grid item xs={12}>
           <Typography variant="h5" sx={{ padding: 1, color: "black" }}>
             OpenID-Connect
           </Typography>
-          <form
-            noValidate
-            onSubmit={handleSubmit}
-            style={{
-              height: "100vh",
-              display: "flex",
-              flexDirection: "column",
-            }}
-          >
-            <FormControl sx={{ width: "100%", padding: 1 }}>
-              <FormLabel>Flow</FormLabel>
-              <RadioGroup
-                value={flowType}
-                onChange={(e) => handleFlowTypeChange(e)}
-                sx={{ color: "black" }}
-                row
-              >
-                <FormControlLabel
-                  value="authorization-code"
-                  control={<Radio />}
-                  label="Authorization Code"
-                />
-                <FormControlLabel
-                  value="service-account"
-                  control={<Radio />}
-                  label="Service Account"
-                />
-                <FormControlLabel
-                  value="password"
-                  control={<Radio />}
-                  label="Password"
-                />
-              </RadioGroup>
-            </FormControl>
-            {flowType && (
-              <Box
-                sx={{
-                  textAlign: "center",
-                  height: "100vh",
+        </Grid>
+        <Grid item xs={12} md={authenticated ? 6 : 12}>
+          <Paper elevation={3}>
+            <Box sx={{ padding: 1, height: "100%" }}>
+              <form
+                noValidate
+                onSubmit={handleSubmit}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
                 }}
               >
-                <TextField
-                  name="discoveryUrl"
-                  label="Discovery URL"
-                  onChange={(e) => handleChange(e)}
-                  value={formValues.discoveryUrl.value}
-                  InputProps={{
-                    endAdornment: validDiscoveryUrl && (
-                      <CheckCircleIcon color="success" />
-                    ),
-                  }}
-                />
-
-                {!["service-account", "password"].includes(flowType) && (
-                  <>
-                    <TextField
-                      name="authorizationUrl"
-                      label="Authorization URL"
-                      onChange={(e) => handleChange(e)}
-                      value={formValues.authorizationUrl.value}
-                      required
-                      error={formValues.authorizationUrl.error}
-                      helperText={
-                        formValues.authorizationUrl.error &&
-                        formValues.authorizationUrl.errorMessage
-                      }
+                <FormControl sx={{ width: "100%", padding: 1 }}>
+                  <FormLabel>Flow</FormLabel>
+                  <RadioGroup
+                    value={flowType}
+                    onChange={(e) => handleFlowTypeChange(e)}
+                    sx={{ color: "black" }}
+                    row
+                  >
+                    <FormControlLabel
+                      value="authorization-code"
+                      control={<Radio />}
+                      label="Authorization Code"
                     />
-                    <TextField
-                      name="forwardQueryParams"
-                      label="Forward Query Params"
-                      onChange={(e) => handleChange(e)}
-                      value={formValues.forwardQueryParams.value}
-                      helperText="param1=value1&param2=value2"
+                    <FormControlLabel
+                      value="service-account"
+                      control={<Radio />}
+                      label="Service Account"
                     />
-                  </>
-                )}
-
-                <TextField
-                  name="tokenUrl"
-                  label="Token URL"
-                  onChange={(e) => handleChange(e)}
-                  value={formValues.tokenUrl.value}
-                  error={formValues.tokenUrl.error}
-                  helperText={
-                    formValues.tokenUrl.error &&
-                    formValues.tokenUrl.errorMessage
-                  }
-                  required
-                />
-
-                {!["service-account", "password"].includes(flowType) && (
-                  <TextField
-                    name="logoutUrl"
-                    label="Logout URL"
-                    onChange={(e) => handleChange(e)}
-                    value={formValues.logoutUrl.value}
-                  />
-                )}
-                <TextField
-                  name="clientId"
-                  label="Client ID"
-                  onChange={(e) => handleChange(e)}
-                  value={formValues.clientId.value}
-                  required
-                  error={formValues.clientId.error}
-                  helperText={
-                    formValues.clientId.error &&
-                    formValues.clientId.errorMessage
-                  }
-                />
-                <TextField
-                  name="clientSecret"
-                  label="Client Secret"
-                  onChange={(e) => handleChange(e)}
-                  value={formValues.clientSecret.value}
-                />
-                {flowType === "password" && (
-                  <>
-                    <TextField
-                      name="username"
-                      label="Username"
-                      onChange={(e) => handleChange(e)}
-                      value={formValues.username.value}
-                      error={formValues.username.error}
-                      helperText={
-                        formValues.username.error &&
-                        formValues.username.errorMessage
-                      }
-                    />
-
-                    <TextField
-                      name="password"
+                    <FormControlLabel
+                      value="password"
+                      control={<Radio />}
                       label="Password"
+                    />
+                  </RadioGroup>
+                </FormControl>
+                {flowType && (
+                  <Box
+                    sx={{
+                      textAlign: "center",
+                      height: "100vh",
+                    }}
+                  >
+                    <TextField
+                      name="discoveryUrl"
+                      label="Discovery URL"
                       onChange={(e) => handleChange(e)}
-                      value={formValues.password.value}
-                      error={formValues.password.error}
+                      value={formValues.discoveryUrl.value}
+                      InputProps={{
+                        endAdornment: validDiscoveryUrl && (
+                          <CheckCircleIcon color="success" />
+                        ),
+                      }}
+                    />
+
+                    {!["service-account", "password"].includes(flowType) && (
+                      <>
+                        <TextField
+                          name="authorizationUrl"
+                          label="Authorization URL"
+                          onChange={(e) => handleChange(e)}
+                          value={formValues.authorizationUrl.value}
+                          required
+                          error={formValues.authorizationUrl.error}
+                          helperText={
+                            formValues.authorizationUrl.error &&
+                            formValues.authorizationUrl.errorMessage
+                          }
+                        />
+                        <TextField
+                          name="forwardQueryParams"
+                          label="Forward Query Params"
+                          onChange={(e) => handleChange(e)}
+                          value={formValues.forwardQueryParams.value}
+                          helperText="param1=value1&param2=value2"
+                        />
+
+                        <TextField
+                          name="userinfoUrl"
+                          label="Userinfo URL"
+                          onChange={(e) => handleChange(e)}
+                          value={formValues.userinfoUrl.value}
+                        />
+                      </>
+                    )}
+
+                    <TextField
+                      name="tokenUrl"
+                      label="Token URL"
+                      onChange={(e) => handleChange(e)}
+                      value={formValues.tokenUrl.value}
+                      error={formValues.tokenUrl.error}
                       helperText={
-                        formValues.password.error &&
-                        formValues.password.errorMessage
+                        formValues.tokenUrl.error &&
+                        formValues.tokenUrl.errorMessage
+                      }
+                      required
+                    />
+
+                    {!["service-account", "password"].includes(flowType) && (
+                      <TextField
+                        name="logoutUrl"
+                        label="Logout URL"
+                        onChange={(e) => handleChange(e)}
+                        value={formValues.logoutUrl.value}
+                      />
+                    )}
+                    <TextField
+                      name="clientId"
+                      label="Client ID"
+                      onChange={(e) => handleChange(e)}
+                      value={formValues.clientId.value}
+                      required
+                      error={formValues.clientId.error}
+                      helperText={
+                        formValues.clientId.error &&
+                        formValues.clientId.errorMessage
                       }
                     />
-                  </>
-                )}
+                    <TextField
+                      name="clientSecret"
+                      label="Client Secret"
+                      onChange={(e) => handleChange(e)}
+                      value={formValues.clientSecret.value}
+                    />
+                    {flowType === "password" && (
+                      <>
+                        <TextField
+                          name="username"
+                          label="Username"
+                          onChange={(e) => handleChange(e)}
+                          value={formValues.username.value}
+                          error={formValues.username.error}
+                          helperText={
+                            formValues.username.error &&
+                            formValues.username.errorMessage
+                          }
+                        />
 
-                <MultiSelect
-                  onChange={setScopes}
-                  label="Scopes"
-                  defaultValue={["openid"]}
-                  fixedOptions={["openid"]}
-                />
-                {!["service-account", "password"].includes(flowType) && (
-                  <TextField
-                    name="redirectUri"
-                    label="Redirect URI"
-                    onChange={(e) => handleChange(e)}
-                    value={formValues.redirectUri.value}
-                  />
+                        <TextField
+                          name="password"
+                          label="Password"
+                          onChange={(e) => handleChange(e)}
+                          value={formValues.password.value}
+                          error={formValues.password.error}
+                          helperText={
+                            formValues.password.error &&
+                            formValues.password.errorMessage
+                          }
+                        />
+                      </>
+                    )}
+
+                    <MultiSelect
+                      onChange={setScopes}
+                      label="Scopes"
+                      defaultValue={["openid"]}
+                      fixedOptions={["openid"]}
+                    />
+                    {!["service-account", "password"].includes(flowType) && (
+                      <TextField
+                        name="redirectUri"
+                        label="Redirect URI"
+                        onChange={(e) => handleChange(e)}
+                        value={formValues.redirectUri.value}
+                      />
+                    )}
+                    {authenticated ? (
+                      <Button variant="contained" onClick={handleLogout}>
+                        Logout
+                      </Button>
+                    ) : (
+                      <Button variant="contained" type="submit">
+                        Login
+                      </Button>
+                    )}
+                    <Button
+                      variant="contained"
+                      onClick={() => {
+                        localStorage.removeItem("formValues");
+                        window.location.reload();
+                      }}
+                      color="error"
+                      sx={{ marginLeft: 2 }}
+                    >
+                      Reset
+                    </Button>
+                  </Box>
                 )}
-                {authenticated ? (
-                  <Button variant="contained" onClick={handleLogout}>
-                    Logout
-                  </Button>
-                ) : (
-                  <Button variant="contained" type="submit">
-                    Login
-                  </Button>
-                )}
-                <Button
-                  variant="contained"
-                  onClick={() => {
-                    localStorage.removeItem("formValues");
-                    window.location.reload();
-                  }}
-                  color="error"
-                  sx={{ marginLeft: 2 }}
-                >
-                  Reset
-                </Button>
-              </Box>
-            )}
-          </form>
+              </form>
+            </Box>
+          </Paper>
         </Grid>
         {authenticated && (
           <Grid item xs={12} md={6}>

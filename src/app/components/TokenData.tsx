@@ -24,7 +24,11 @@ const TableData = (props: TableDataProps) => {
   const { token } = props;
   const decodedToken = (token: string) => {
     if (!token) return;
-    return jwtDecode(token);
+    try {
+      return jwtDecode(token);
+    } catch (err) {
+      return JSON.parse(token);
+    }
   };
 
   const unixTimestampToDate = (timestamp: number) => {
@@ -97,7 +101,7 @@ export default function TokenData(props: TokenDataProps) {
               <TableData token={tokens[token]} />
             ) : (
               <Typography variant="body1" sx={{ wordWrap: "break-word" }}>
-                {tokens[token]}
+                {JSON.stringify(tokens[token])}
               </Typography>
             )}
           </>

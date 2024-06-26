@@ -1,5 +1,5 @@
 {
-  "name": "auth-playground",
+  "name": "sso-playground",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -19,6 +19,7 @@
     "@uidotdev/usehooks": "^2.4.1",
     "jwt-decode": "^4.0.0",
     "next": "14.2.2",
+    "next-runtime-env": "^3.2.2",
     "react": "^18",
     "react-dom": "^18"
   },

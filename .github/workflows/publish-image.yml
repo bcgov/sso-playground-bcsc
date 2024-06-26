@@ -1,4 +1,4 @@
-name: Create and publish Auth Playground image
+name: Create and publish SSO Playground image
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
 
 env:
   GITHUB_REGISTRY: ghcr.io
-  IMAGE_NAME: nithinkuruba/auth-playground
+  IMAGE_NAME: bcgov/sso-playground
 
 jobs:
   build-and-push-image:

@@ -9,6 +9,7 @@ interface openIdConfig {
   username?: string;
   password?: string;
   forwardQueryParams: string;
+  userinfoEndpoint?: string;
 }
 
 export default class AuthService {
@@ -22,6 +23,7 @@ export default class AuthService {
   username: string;
   password: string;
   forwardQueryParams: string;
+  userinfoEndpoint?: string;
 
   constructor(config: openIdConfig) {
     this.authorizationEndpoint = config.authorizationEndpoint || "";
@@ -34,6 +36,7 @@ export default class AuthService {
     this.username = config?.username || "";
     this.password = config?.password || "";
     this.forwardQueryParams = config?.forwardQueryParams || "";
+    this.userinfoEndpoint = config?.userinfoEndpoint || "";
   }
 
   getRandomString = () => {
@@ -162,12 +165,23 @@ export default class AuthService {
   }
 
   async logout() {
+    const tokens = JSON.parse(sessionStorage.getItem("tokens") || "");
+
     sessionStorage.removeItem("tokens");
     sessionStorage.removeItem("oidc_nonce");
     sessionStorage.removeItem("oauth_state");
     sessionStorage.removeItem("code_verifier");
     sessionStorage.removeItem("code_challenge");
-    window.location.href = `${this.logoutEndpoint}?client_id=${this.clientId}&post_logout_redirect_uri=${this.redirectUri}`;
+    let logoutUrlWithIdToken = `${this.logoutEndpoint}?post_logout_redirect_uri=${this.redirectUri}`;
+    console.log("tokens: ", tokens?.id_token);
+
+    if (tokens?.id_token) {
+      logoutUrlWithIdToken =
+        logoutUrlWithIdToken +
+        `&id_token_hint=${encodeURIComponent(tokens.id_token)}`;
+    }
+
+    window.location.href = logoutUrlWithIdToken;
   }
 
   async handleCallback() {
@@ -207,6 +221,19 @@ export default class AuthService {
     });
 
     const tokens = await response.json();
+
+    if (this.userinfoEndpoint && tokens?.access_token) {
+      const userinfoResponse = await fetch(this.userinfoEndpoint, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${tokens?.access_token}`,
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+      });
+      const userinfo = await userinfoResponse.json();
+      tokens["userinfo_token"] = userinfo;
+    }
+
     sessionStorage.setItem("tokens", JSON.stringify(tokens || {}));
   }
 
