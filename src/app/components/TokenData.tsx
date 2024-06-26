@@ -20,21 +20,15 @@ interface TableDataProps {
   token: string;
 }
 
-function isJson(str: string) {
-  try {
-    JSON.parse(str);
-    return true;
-  } catch (e) {
-    return false;
-  }
-}
-
 const TableData = (props: TableDataProps) => {
   const { token } = props;
   const decodedToken = (token: string) => {
     if (!token) return;
-    if (token.split(".").length > 1) return jwtDecode(token);
-    else return JSON.parse(token);
+    try {
+      return jwtDecode(token);
+    } catch (err) {
+      return JSON.parse(token);
+    }
   };
 
   const unixTimestampToDate = (timestamp: number) => {
