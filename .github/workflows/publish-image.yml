@@ -9,6 +9,8 @@ on:
 env:
   GITHUB_REGISTRY: ghcr.io
   IMAGE_NAME: bcgov/sso-playground
+  OPENSHIFT_TOKEN: ${{ secrets.OPENSHIFT_TOKEN }}
+  OPENSHIFT_NAMESPACE: ${{ secrets.OPENSHIFT_NAMESPACE }}
 
 jobs:
   build-and-push-image:
@@ -67,3 +69,18 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
+
+      - name: Authenticate and set context
+        uses: redhat-actions/oc-login@v1
+        with:
+          openshift_server_url: ${{ secrets.OPENSHIFT_SERVER }}
+          openshift_token: ${{ env.OPENSHIFT_TOKEN }}
+          namespace: ${{ env.OPENSHIFT_NAMESPACE }}
+          insecure_skip_tls_verify: true
+
+      - name: Deploy with Helm chart
+        run: |
+          namespace=${{ env.OPENSHIFT_NAMESPACE }}
+          helm upgrade --install --atomic sso-playground . -n ${namespace} \
+          -f values.yaml --set image.tag="${{ steps.get-tag.outputs.release_tag }}"
+        working-directory: ./helm/app
