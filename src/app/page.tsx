@@ -10,6 +10,8 @@ import {
   FormControlLabel,
   Radio,
   Button,
+  InputAdornment,
+  IconButton,
 } from "@mui/material";
 import { MultiSelect } from "./components/MultiSelect";
 import { TextField } from "./components/TextField";
@@ -19,6 +21,7 @@ import TokenData from "./components/TokenData";
 import { AlertContext } from "./components/AlertProvider";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import { env } from "next-runtime-env";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 interface Tokens {
   access_token: string;
@@ -122,6 +125,9 @@ export default function Form() {
     id_token: "",
     refresh_token: "",
   });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showClientSecret, setShowClientSecret] = useState(false);
+
   const [validDiscoveryUrl, setValidDiscoveryUrl] = useState(false);
   let validatedFormFields = ["clientId"];
 
@@ -456,6 +462,7 @@ export default function Form() {
                     <TextField
                       name="clientSecret"
                       label="Client Secret"
+                      type={showClientSecret ? "text" : "password"}
                       onChange={(e) => handleChange(e)}
                       value={formValues.clientSecret.value}
                       required={flowType === "service-account"}
@@ -468,6 +475,26 @@ export default function Form() {
                         formValues.clientSecret.error &&
                         formValues.clientSecret.errorMessage
                       }
+                      InputProps={{
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton
+                              aria-label="toggle client secret visibility"
+                              onClick={() =>
+                                setShowClientSecret((show) => !show)
+                              }
+                              onMouseDown={(e) => e.preventDefault()}
+                              edge="end"
+                            >
+                              {showClientSecret ? (
+                                <VisibilityOff />
+                              ) : (
+                                <Visibility />
+                              )}
+                            </IconButton>
+                          </InputAdornment>
+                        ),
+                      }}
                     />
                     {flowType === "password" && (
                       <>
@@ -476,6 +503,7 @@ export default function Form() {
                           label="Username"
                           onChange={(e) => handleChange(e)}
                           value={formValues.username.value}
+                          required
                           error={formValues.username.error}
                           helperText={
                             formValues.username.error &&
@@ -486,6 +514,8 @@ export default function Form() {
                         <TextField
                           name="password"
                           label="Password"
+                          required
+                          type={showPassword ? "text" : "password"}
                           onChange={(e) => handleChange(e)}
                           value={formValues.password.value}
                           error={formValues.password.error}
@@ -493,6 +523,26 @@ export default function Form() {
                             formValues.password.error &&
                             formValues.password.errorMessage
                           }
+                          InputProps={{
+                            endAdornment: (
+                              <InputAdornment position="end">
+                                <IconButton
+                                  aria-label="toggle password visibility"
+                                  onClick={() =>
+                                    setShowPassword((show) => !show)
+                                  }
+                                  onMouseDown={(e) => e.preventDefault()}
+                                  edge="end"
+                                >
+                                  {showPassword ? (
+                                    <VisibilityOff />
+                                  ) : (
+                                    <Visibility />
+                                  )}
+                                </IconButton>
+                              </InputAdornment>
+                            ),
+                          }}
                         />
                       </>
                     )}
