@@ -58,7 +58,7 @@ const initialFormValues: FormValues = {
   clientSecret: {
     value: "",
     error: false,
-    errorMessage: "",
+    errorMessage: "Client secret is required",
   },
   discoveryUrl: {
     value: "",
@@ -127,6 +127,8 @@ export default function Form() {
 
   if (flowType === "password") {
     validatedFormFields = ["clientId", "tokenUrl", "username", "password"];
+  } else if (flowType === "service-account") {
+    validatedFormFields = ["clientId", "tokenUrl", "clientSecret"];
   } else validatedFormFields = ["authorizationUrl", "clientId", "tokenUrl"];
 
   const { error, setError } = useContext<AlertContext>(AlertContext);
@@ -166,10 +168,15 @@ export default function Form() {
   };
 
   const handleAuthCallback = useCallback(async () => {
-    await authService.handleCallback();
-    setAuthenticated(authService.isAuthenticated());
-    if (sessionStorage.getItem("tokens"))
-      setTokens(JSON.parse(sessionStorage.getItem("tokens") || ""));
+    try {
+      localStorage.removeItem("authError");
+      await authService.handleCallback();
+      setAuthenticated(authService.isAuthenticated());
+      if (sessionStorage.getItem("tokens"))
+        setTokens(JSON.parse(sessionStorage.getItem("tokens") || ""));
+    } catch (err: any) {
+      console.error(err);
+    }
   }, [authService]);
 
   useEffect(() => {
@@ -181,6 +188,15 @@ export default function Form() {
       }
       if (window.localStorage.getItem("flowType"))
         setFlowType(localStorage.getItem("flowType") || "");
+      if (window.localStorage.getItem("authError"))
+        setError(window.localStorage.getItem("authError") || "");
+      window.addEventListener("tokens", (e: any) => {
+        window.location.reload();
+      });
+      window.addEventListener("authError", (e: any) => {
+        setError(window.localStorage.getItem("authError") || "");
+        window.localStorage.removeItem("authError");
+      });
     }
   }, []);
 
@@ -195,11 +211,7 @@ export default function Form() {
   const handleLogin = async () => {
     try {
       await authService.login(flowType);
-      if (["service-account", "password"].includes(flowType)) {
-        window.location.reload();
-      }
     } catch (err: any) {
-      setError(err?.message || err);
       console.error(error);
     }
   };
@@ -446,6 +458,16 @@ export default function Form() {
                       label="Client Secret"
                       onChange={(e) => handleChange(e)}
                       value={formValues.clientSecret.value}
+                      required={flowType === "service-account"}
+                      error={
+                        flowType === "service-account" &&
+                        formValues.clientSecret.error
+                      }
+                      helperText={
+                        flowType === "service-account" &&
+                        formValues.clientSecret.error &&
+                        formValues.clientSecret.errorMessage
+                      }
                     />
                     {flowType === "password" && (
                       <>
@@ -502,6 +524,7 @@ export default function Form() {
                       variant="contained"
                       onClick={() => {
                         localStorage.removeItem("formValues");
+                        localStorage.removeItem("flowType");
                         window.location.reload();
                       }}
                       color="error"

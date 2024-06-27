@@ -1,3 +1,5 @@
+import { handleError } from "./helpers";
+
 interface openIdConfig {
   authorizationEndpoint?: string;
   tokenEndpoint: string;
@@ -123,10 +125,12 @@ export default class AuthService {
       });
       if (response.status !== 200) {
         const error = await response.json();
-        throw new Error(error?.error);
+        handleError(error);
+        return;
       }
       const tokens = await response.json();
       sessionStorage.setItem("tokens", JSON.stringify(tokens || {}));
+      window.dispatchEvent(new Event("tokens"));
       return;
     }
     const state = this.getRandomString();
@@ -220,6 +224,12 @@ export default class AuthService {
       body: tokenRequestBody.toString(),
     });
 
+    if (!response.ok) {
+      const error = await response.json();
+      handleError(error);
+      return;
+    }
+
     const tokens = await response.json();
 
     if (this.userinfoEndpoint && tokens?.access_token) {
@@ -230,6 +240,13 @@ export default class AuthService {
           "Content-Type": "application/x-www-form-urlencoded",
         },
       });
+
+      if (!userinfoResponse.ok) {
+        const error = await userinfoResponse.json();
+        handleError(error);
+        return;
+      }
+
       const userinfo = await userinfoResponse.json();
       tokens["userinfo_token"] = userinfo;
     }
