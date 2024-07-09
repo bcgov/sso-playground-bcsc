@@ -20,8 +20,8 @@ import AuthService from "./services/authorization";
 import TokenData from "./components/TokenData";
 import { AlertContext } from "./components/AlertProvider";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import { env } from "next-runtime-env";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { fetchEnvVars } from "./utils/config";
 
 interface Tokens {
   access_token: string;
@@ -52,72 +52,77 @@ interface FormValues {
   userinfoUrl: { value: string; error: boolean; errorMessage: string };
 }
 
-const initialFormValues: FormValues = {
-  clientId: {
-    value: "",
-    error: false,
-    errorMessage: "Client ID is required",
-  },
-  clientSecret: {
-    value: "",
-    error: false,
-    errorMessage: "Client secret is required",
-  },
-  discoveryUrl: {
-    value: "",
-    error: false,
-    errorMessage: "",
-  },
-  authorizationUrl: {
-    value: "",
-    error: false,
-    errorMessage: "Please enter a valid authorization URL",
-  },
-  forwardQueryParams: {
-    value: "",
-    error: false,
-    errorMessage: "",
-  },
-  tokenUrl: {
-    value: "",
-    error: false,
-    errorMessage: "Please enter a valid token URL",
-  },
-  logoutUrl: {
-    value: "",
-    error: false,
-    errorMessage: "",
-  },
-  userinfoUrl: {
-    value: "",
-    error: false,
-    errorMessage: "",
-  },
-  redirectUri: {
-    value: env("NEXT_PUBLIC_REDIRECT_URI") || "http://localhost:3000",
-    error: false,
-    errorMessage: "",
-  },
-  scopes: {
-    value: ["openid"],
-    error: false,
-    errorMessage: "Please pass atleast one scope",
-  },
-  username: {
-    value: "",
-    error: false,
-    errorMessage: "Username is required",
-  },
-  password: {
-    value: "",
-    error: false,
-    errorMessage: "Password is required",
-  },
+const getInitialFormValues = (redirectUri: string) => {
+  return {
+    clientId: {
+      value: "",
+      error: false,
+      errorMessage: "Client ID is required",
+    },
+    clientSecret: {
+      value: "",
+      error: false,
+      errorMessage: "Client secret is required",
+    },
+    discoveryUrl: {
+      value: "",
+      error: false,
+      errorMessage: "",
+    },
+    authorizationUrl: {
+      value: "",
+      error: false,
+      errorMessage: "Please enter a valid authorization URL",
+    },
+    forwardQueryParams: {
+      value: "",
+      error: false,
+      errorMessage: "",
+    },
+    tokenUrl: {
+      value: "",
+      error: false,
+      errorMessage: "Please enter a valid token URL",
+    },
+    logoutUrl: {
+      value: "",
+      error: false,
+      errorMessage: "",
+    },
+    userinfoUrl: {
+      value: "",
+      error: false,
+      errorMessage: "",
+    },
+    redirectUri: {
+      value: redirectUri || "",
+      error: false,
+      errorMessage: "",
+    },
+    scopes: {
+      value: ["openid"],
+      error: false,
+      errorMessage: "Please pass atleast one scope",
+    },
+    username: {
+      value: "",
+      error: false,
+      errorMessage: "Username is required",
+    },
+    password: {
+      value: "",
+      error: false,
+      errorMessage: "Password is required",
+    },
+  };
 };
 
 export default function Form() {
+  const { envRedirectUri } = fetchEnvVars();
   const [flowType, setFlowType] = useState<string>("");
-  const [formValues, setFormValues] = useState<FormValues>(initialFormValues);
+  const [formValues, setFormValues] = useState<FormValues>(
+    getInitialFormValues(envRedirectUri || "")
+  );
 
   const [authenticated, setAuthenticated] = useState(false);
   const [tokens, setTokens] = useState<Tokens>({
