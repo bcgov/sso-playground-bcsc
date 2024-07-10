@@ -21,7 +21,7 @@ import TokenData from "./components/TokenData";
 import { AlertContext } from "./components/AlertProvider";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
-import { fetchEnvVars } from "./utils/config";
+import { env } from "next-runtime-env";
 
 interface Tokens {
   access_token: string;
@@ -118,10 +118,9 @@ const getInitialFormValues = (redirectUri: string) => {
 };
 
 export default function Form() {
-  const { envRedirectUri } = fetchEnvVars();
   const [flowType, setFlowType] = useState<string>("");
   const [formValues, setFormValues] = useState<FormValues>(
-    getInitialFormValues(envRedirectUri || "")
+    getInitialFormValues(env("NEXT_PUBLIC_REDIRECT_URI") || "")
   );
 
   const [authenticated, setAuthenticated] = useState(false);
