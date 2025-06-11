@@ -263,12 +263,12 @@ export default class AuthService {
       const response = await userinfoResponse.text();
 
       try {
-        return jwtDecode(response);
-      } catch {
         return JSON.parse(response);
+      } catch {
+        return jwtDecode(response);
       }
     } catch (err) {
-      console.error("Failed to parse userinfo response:", err);
+      console.error("Failed to fetch userinfo:", err);
       return null;
     }
   }
