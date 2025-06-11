@@ -1,5 +1,4 @@
 import { handleError } from "./helpers";
-import { jwtDecode } from "jwt-decode";
 
 interface openIdConfig {
   authorizationEndpoint?: string;
@@ -201,8 +200,6 @@ export default class AuthService {
   }
 
   private async requestTokens(authorizationCode: string) {
-    if (!authorizationCode || !this.tokenEndpoint?.trim()) return;
-
     const tokenRequestBody = new URLSearchParams({
       grant_type: "authorization_code",
       code: authorizationCode,
@@ -236,20 +233,10 @@ export default class AuthService {
     const tokens = await response.json();
 
     if (this.userinfoEndpoint && tokens?.access_token) {
-      const userinfo = await this.fetchUserInfo(tokens.access_token);
-      if (userinfo) {
-        tokens["userinfo_token"] = userinfo;
-      }
-    }
-    sessionStorage.setItem("tokens", JSON.stringify(tokens || {}));
-  }
-
-  private async fetchUserInfo(accessToken: string) {
-    try {
-      const userinfoResponse = await fetch(this.userinfoEndpoint!, {
+      const userinfoResponse = await fetch(this.userinfoEndpoint, {
         method: "GET",
         headers: {
-          Authorization: `Bearer ${accessToken}`,
+          Authorization: `Bearer ${tokens?.access_token}`,
           "Content-Type": "application/x-www-form-urlencoded",
         },
       });
@@ -260,17 +247,11 @@ export default class AuthService {
         return;
       }
 
-      const response = await userinfoResponse.text();
-
-      try {
-        return jwtDecode(response);
-      } catch {
-        return JSON.parse(response);
-      }
-    } catch (err) {
-      console.error("Failed to parse userinfo response:", err);
-      return null;
+      const userinfo = await userinfoResponse.json();
+      tokens["userinfo_token"] = userinfo;
     }
+
+    sessionStorage.setItem("tokens", JSON.stringify(tokens || {}));
   }
 
   isAuthenticated() {
