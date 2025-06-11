@@ -10,6 +10,8 @@ import {
   FormControlLabel,
   Radio,
   Button,
+  InputAdornment,
+  IconButton,
 } from "@mui/material";
 import { MultiSelect } from "./components/MultiSelect";
 import { TextField } from "./components/TextField";
@@ -18,6 +20,7 @@ import AuthService from "./services/authorization";
 import TokenData from "./components/TokenData";
 import { AlertContext } from "./components/AlertProvider";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { env } from "next-runtime-env";
 
 interface Tokens {
@@ -49,72 +52,76 @@ interface FormValues {
   userinfoUrl: { value: string; error: boolean; errorMessage: string };
 }
 
-const initialFormValues: FormValues = {
-  clientId: {
-    value: "",
-    error: false,
-    errorMessage: "Client ID is required",
-  },
-  clientSecret: {
-    value: "",
-    error: false,
-    errorMessage: "",
-  },
-  discoveryUrl: {
-    value: "",
-    error: false,
-    errorMessage: "",
-  },
-  authorizationUrl: {
-    value: "",
-    error: false,
-    errorMessage: "Please enter a valid authorization URL",
-  },
-  forwardQueryParams: {
-    value: "",
-    error: false,
-    errorMessage: "",
-  },
-  tokenUrl: {
-    value: "",
-    error: false,
-    errorMessage: "Please enter a valid token URL",
-  },
-  logoutUrl: {
-    value: "",
-    error: false,
-    errorMessage: "",
-  },
-  userinfoUrl: {
-    value: "",
-    error: false,
-    errorMessage: "",
-  },
-  redirectUri: {
-    value: env("NEXT_PUBLIC_REDIRECT_URI") || "http://localhost:3000",
-    error: false,
-    errorMessage: "",
-  },
-  scopes: {
-    value: ["openid"],
-    error: false,
-    errorMessage: "Please pass atleast one scope",
-  },
-  username: {
-    value: "",
-    error: false,
-    errorMessage: "Username is required",
-  },
-  password: {
-    value: "",
-    error: false,
-    errorMessage: "Password is required",
-  },
+const getInitialFormValues = (redirectUri: string) => {
+  return {
+    clientId: {
+      value: "",
+      error: false,
+      errorMessage: "Client ID is required",
+    },
+    clientSecret: {
+      value: "",
+      error: false,
+      errorMessage: "Client secret is required",
+    },
+    discoveryUrl: {
+      value: "",
+      error: false,
+      errorMessage: "",
+    },
+    authorizationUrl: {
+      value: "",
+      error: false,
+      errorMessage: "Please enter a valid authorization URL",
+    },
+    forwardQueryParams: {
+      value: "",
+      error: false,
+      errorMessage: "",
+    },
+    tokenUrl: {
+      value: "",
+      error: false,
+      errorMessage: "Please enter a valid token URL",
+    },
+    logoutUrl: {
+      value: "",
+      error: false,
+      errorMessage: "",
+    },
+    userinfoUrl: {
+      value: "",
+      error: false,
+      errorMessage: "",
+    },
+    redirectUri: {
+      value: redirectUri || "",
+      error: false,
+      errorMessage: "",
+    },
+    scopes: {
+      value: ["openid"],
+      error: false,
+      errorMessage: "Please pass atleast one scope",
+    },
+    username: {
+      value: "",
+      error: false,
+      errorMessage: "Username is required",
+    },
+    password: {
+      value: "",
+      error: false,
+      errorMessage: "Password is required",
+    },
+  };
 };
 
 export default function Form() {
   const [flowType, setFlowType] = useState<string>("");
-  const [formValues, setFormValues] = useState<FormValues>(initialFormValues);
+  const [formValues, setFormValues] = useState<FormValues>(
+    getInitialFormValues(env("NEXT_PUBLIC_REDIRECT_URI") || "")
+  );
 
   const [authenticated, setAuthenticated] = useState(false);
   const [tokens, setTokens] = useState<Tokens>({
@@ -122,11 +129,16 @@ export default function Form() {
     id_token: "",
     refresh_token: "",
   });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showClientSecret, setShowClientSecret] = useState(false);
+
   const [validDiscoveryUrl, setValidDiscoveryUrl] = useState(false);
   let validatedFormFields = ["clientId"];
 
   if (flowType === "password") {
     validatedFormFields = ["clientId", "tokenUrl", "username", "password"];
+  } else if (flowType === "service-account") {
+    validatedFormFields = ["clientId", "tokenUrl", "clientSecret"];
   } else validatedFormFields = ["authorizationUrl", "clientId", "tokenUrl"];
 
   const { error, setError } = useContext<AlertContext>(AlertContext);
@@ -166,10 +178,15 @@ export default function Form() {
   };
 
   const handleAuthCallback = useCallback(async () => {
-    await authService.handleCallback();
-    setAuthenticated(authService.isAuthenticated());
-    if (sessionStorage.getItem("tokens"))
-      setTokens(JSON.parse(sessionStorage.getItem("tokens") || ""));
+    try {
+      localStorage.removeItem("authError");
+      await authService.handleCallback();
+      setAuthenticated(authService.isAuthenticated());
+      if (sessionStorage.getItem("tokens"))
+        setTokens(JSON.parse(sessionStorage.getItem("tokens") || ""));
+    } catch (err: any) {
+      console.error(err);
+    }
   }, [authService]);
 
   useEffect(() => {
@@ -181,6 +198,15 @@ export default function Form() {
       }
       if (window.localStorage.getItem("flowType"))
         setFlowType(localStorage.getItem("flowType") || "");
+      if (window.localStorage.getItem("authError"))
+        setError(window.localStorage.getItem("authError") || "");
+      window.addEventListener("tokens", (e: any) => {
+        window.location.reload();
+      });
+      window.addEventListener("authError", (e: any) => {
+        setError(window.localStorage.getItem("authError") || "");
+        window.localStorage.removeItem("authError");
+      });
     }
   }, []);
 
@@ -195,11 +221,7 @@ export default function Form() {
   const handleLogin = async () => {
     try {
       await authService.login(flowType);
-      if (["service-account", "password"].includes(flowType)) {
-        window.location.reload();
-      }
     } catch (err: any) {
-      setError(err?.message || err);
       console.error(error);
     }
   };
@@ -444,8 +466,39 @@ export default function Form() {
                     <TextField
                       name="clientSecret"
                       label="Client Secret"
+                      type={showClientSecret ? "text" : "password"}
                       onChange={(e) => handleChange(e)}
                       value={formValues.clientSecret.value}
+                      required={flowType === "service-account"}
+                      error={
+                        flowType === "service-account" &&
+                        formValues.clientSecret.error
+                      }
+                      helperText={
+                        flowType === "service-account" &&
+                        formValues.clientSecret.error &&
+                        formValues.clientSecret.errorMessage
+                      }
+                      InputProps={{
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton
+                              aria-label="toggle client secret visibility"
+                              onClick={() =>
+                                setShowClientSecret((show) => !show)
+                              }
+                              onMouseDown={(e) => e.preventDefault()}
+                              edge="end"
+                            >
+                              {showClientSecret ? (
+                                <VisibilityOff />
+                              ) : (
+                                <Visibility />
+                              )}
+                            </IconButton>
+                          </InputAdornment>
+                        ),
+                      }}
                     />
                     {flowType === "password" && (
                       <>
@@ -454,6 +507,7 @@ export default function Form() {
                           label="Username"
                           onChange={(e) => handleChange(e)}
                           value={formValues.username.value}
+                          required
                           error={formValues.username.error}
                           helperText={
                             formValues.username.error &&
@@ -464,6 +518,8 @@ export default function Form() {
                         <TextField
                           name="password"
                           label="Password"
+                          required
+                          type={showPassword ? "text" : "password"}
                           onChange={(e) => handleChange(e)}
                           value={formValues.password.value}
                           error={formValues.password.error}
@@ -471,6 +527,26 @@ export default function Form() {
                             formValues.password.error &&
                             formValues.password.errorMessage
                           }
+                          InputProps={{
+                            endAdornment: (
+                              <InputAdornment position="end">
+                                <IconButton
+                                  aria-label="toggle password visibility"
+                                  onClick={() =>
+                                    setShowPassword((show) => !show)
+                                  }
+                                  onMouseDown={(e) => e.preventDefault()}
+                                  edge="end"
+                                >
+                                  {showPassword ? (
+                                    <VisibilityOff />
+                                  ) : (
+                                    <Visibility />
+                                  )}
+                                </IconButton>
+                              </InputAdornment>
+                            ),
+                          }}
                         />
                       </>
                     )}
@@ -502,6 +578,7 @@ export default function Form() {
                       variant="contained"
                       onClick={() => {
                         localStorage.removeItem("formValues");
+                        localStorage.removeItem("flowType");
                         window.location.reload();
                       }}
                       color="error"

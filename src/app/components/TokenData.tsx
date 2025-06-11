@@ -54,7 +54,7 @@ const TableData = (props: TableDataProps) => {
                     {val}
                   </Tooltip>
                 ) : (
-                  val
+                  JSON.stringify(val)
                 )}
               </TableCell>
             </TableRow>
