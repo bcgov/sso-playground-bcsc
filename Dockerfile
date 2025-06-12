@@ -1,7 +1,7 @@
-FROM node:20-alpine
+FROM node:24.2.0-alpine
 WORKDIR /opt/app
 COPY . .
-RUN yarn install
+RUN yarn install --frozen-lockfile
 RUN yarn build
 
 EXPOSE 3000
